@@ -17,13 +17,16 @@ listReg = f"{START_COMMENT}[\\s\\S]+{END_COMMENT}"
 user = os.getenv('INPUT_USERNAME')
 waka_key = os.getenv('INPUT_WAKATIME_API_KEY')
 ghtoken = os.getenv('INPUT_GH_TOKEN')
+blocks = os.getenv("INPUT_BLOCKS")
+timezoneOffset = os.getenv('INPUT_TIMEZONE_OFFSET', 0)
+
 showTimeZone = os.getenv('INPUT_SHOW_TIMEZONE')
 showProjects = os.getenv('INPUT_SHOW_PROJECTS')
 showEditors = os.getenv('INPUT_SHOW_EDITORS')
 showOs = os.getenv('INPUT_SHOW_OS')
 showCommit = os.getenv('INPUT_SHOW_COMMIT')
 showLanguage = os.getenv('INPUT_SHOW_LANGUAGE')
-timezoneOffset = os.getenv('INPUT_TIMEZONE_OFFSET', 0)
+
 
 # The GraphQL query to get commit data.
 userInfoQuery = """
@@ -76,13 +79,27 @@ def run_query(query):
     else:
         raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query))
 
-
+        
+'''
 def make_graph(percent: float):
     '''Make progress graph from API graph'''
     done_block = '█'
     empty_block = '░'
     pc_rnd = round(percent)
     return f"{done_block * int(pc_rnd / 4)}{empty_block * int(25 - int(pc_rnd / 4))}"
+'''
+
+def make_graph(percent: float, blocks: str) -> str:
+    '''Make progress graph from API graph'''
+    if len(blocks) < 2:
+        raise "The BLOCKS need to have at least two characters."
+    divs = len(blocks) - 1
+    graph = blocks[-1] * int(percent / 100 * GRAPH_LENGTH + 0.5 / divs)
+    remainder_block = int((percent / 100 * GRAPH_LENGTH - len(graph)) * divs + 0.5)
+    if remainder_block > 0:
+        graph += blocks[remainder_block]
+    graph += blocks[0] * (GRAPH_LENGTH - len(graph))
+    return graph
 
 
 def make_list(data: list):
@@ -91,7 +108,7 @@ def make_list(data: list):
     for l in data[:5]:
         ln = len(l['name'])
         ln_text = len(l['text'])
-        op = f"{l['name'][:25]}{' ' * (25 - ln)}{l['text']}{' ' * (20 - ln_text)}{make_graph(l['percent'])}   {l['percent']}%"
+        op = f"{l['name'][:25]}{' ' * (25 - ln)}{l['text']}{' ' * (20 - ln_text)}{make_graph(l['percent'], blocks)}   {l['percent']}%"
         data_list.append(op)
     return ' \n'.join(data_list)
 
@@ -102,7 +119,7 @@ def make_commit_list(data: list):
     for l in data[:5]:
         ln = len(l['name'])
         ln_text = len(l['text'])
-        op = f"{l['name']}{' ' * (13 - ln)}{l['text']}{' ' * (15 - ln_text)}{make_graph(l['percent'])}   {l['percent']}%"
+        op = f"{l['name']}{' ' * (13 - ln)}{l['text']}{' ' * (15 - ln_text)}{make_graph(l['percent'], blocks)}   {l['percent']}%"
         data_list.append(op)
     return ' \n'.join(data_list)
 
