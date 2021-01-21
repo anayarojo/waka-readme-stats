@@ -17,6 +17,11 @@ inputs:
     required: false
     default: ${{ github.repository_owner }}
 
+  BLOCKS:
+    description: "Add the progress blocks of your choice"
+    default: "░▒▓█"
+    required: false
+
   SHOW_OS:
     required: false
     description: 'Show the list of OS Worked on In dev metrics'
